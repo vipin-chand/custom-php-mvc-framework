@@ -2,6 +2,7 @@
 
 namespace App\Tests;
 
+use App\Exceptions\MethodNotFound;
 use App\Router;
 use PHPUnit\Framework\TestCase;
 
@@ -57,6 +58,34 @@ class RouterTest extends TestCase
     public function it_test_there_are_no_routes_when_router_is_created()
     {
         $this->assertEmpty($this->router->routes());
+    }
+
+    /**
+     * @test
+     * @dataProvider MethodNotFoundCases
+     */
+    public function it_throws_method_not_found_exception($requestMethod, $requestUri)
+    {
+
+        $user = new Class(){
+            public function delete(){
+                return true;
+            }
+        };
+
+        $this->router->get('/users', [get_class($user), 'index']);
+        $this->router->post('/users', [get_class($user), 'store']);
+
+        $this->expectException(MethodNotFound::class);
+        $this->router->resolveRoute($requestMethod, $requestUri);
+    }
+
+    public function MethodNotFoundCases()
+    {
+        return [
+            ['put', '/users'],
+            ['post', '/invoices']
+        ];
     }
 
 }
